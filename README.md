@@ -1,5 +1,5 @@
 # Робот на гусенечной платформе с манипулятором
-- [Регламент](https://t.me/c/2273739257/3/1673)
+- [Регламент Yandex Camp.pdf](https://github.com/user-attachments/files/17324129/Yandex.Camp.pdf)
 # Состав
 - [Артем](https://t.me/temakonkov)
 - [Артемий](https://t.me/LaKeeRoK)
@@ -58,3 +58,5 @@
 ![image](https://github.com/user-attachments/assets/439c5458-21ae-4d95-a701-117bd85f6528)
 ![image](https://github.com/user-attachments/assets/a66dfffe-c9cc-4bfb-bd52-f72121201256)
 ![image](https://github.com/user-attachments/assets/6e5accf0-47ee-455b-a9a9-9e62c346801c)
+
+

@@ -1,67 +1,29 @@
+from flask import Flask, Response
 import cv2
-import asyncio
-from aiortc import RTCPeerConnection, RTCSessionDescription, VideoStreamTrack, VideoFrame  # Import VideoFrame
-from aiohttp import web
-import json
-import numpy as np
 
-class VideoCameraTrack(VideoStreamTrack):
-    def __init__(self):
-        super().__init__()
-        self.cap = cv2.VideoCapture(0)
+app = Flask(__name__)
 
-    async def recv(self):
-        pts, time_base = await self.next_timestamp()
+# Initialize the webcam
+camera = cv2.VideoCapture(1)  # Use 1 if your camera is on /dev/video1
 
-        # Capture frame from USB camera
-        ret, frame = self.cap.read()
+def generate_frames():
+    while True:
+        success, frame = camera.read()
+        if not success:
+            break
+        else:
+            # Encode the frame in JPEG format
+            ret, buffer = cv2.imencode('.jpg', frame)
+            frame = buffer.tobytes()
 
-        # Resize or modify frame as needed
-        if not ret:
-            return
+        # Yield the frame in the correct format
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
-        # Convert frame to RGB (WebRTC expects RGB format)
-        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+@app.route('/video_feed')
+def video_feed():
+    return Response(generate_frames(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
-        # Create a video frame object
-        frame_data = VideoFrame.from_ndarray(frame_rgb, format="rgb24")
-        frame_data.pts = pts
-        frame_data.time_base = time_base
-        return frame_data
-
-# WebRTC signaling handler
-async def offer(request):
-    params = await request.json()
-    offer = RTCSessionDescription(sdp=params["sdp"], type=params["type"])
-
-    pc = RTCPeerConnection()
-    pc.addTrack(VideoCameraTrack())  # Add video track
-
-    @pc.on("iceconnectionstatechange")
-    async def on_iceconnectionstatechange():
-        print("ICE connection state is %s" % pc.iceConnectionState)
-        if pc.iceConnectionState == "failed":
-            await pc.close()
-
-    await pc.setRemoteDescription(offer)
-    answer = await pc.createAnswer()
-    await pc.setLocalDescription(answer)
-
-    return web.Response(content_type="application/json",
-                        text=json.dumps({
-                            "sdp": pc.localDescription.sdp,
-                            "type": pc.localDescription.type
-                        }))
-
-# Run signaling server
-async def run_server():
-    app = web.Application()
-    app.router.add_post("/offer", offer)
-    runner = web.AppRunner(app)
-    await runner.setup()
-    site = web.TCPSite(runner, "192.168.2.165", 8080)
-    await site.start()
-    print("Server started at http://192.168.2.165:8080")
-
-if __name__ == "__main__":
-    asyncio.run(run_server())
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=1234)

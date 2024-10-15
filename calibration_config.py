@@ -3,13 +3,13 @@ import cv2 as cv
 import glob
 
 
-def get_matrices(images_path, h, w):
+def get_matrices(images_path, board_size, h, w):
     # termination criteria
     criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
-    
+    print(board_size)
     # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
-    objp = np.zeros((6*8,3), np.float32)
-    objp[:,:2] = np.mgrid[0:8,0:6].T.reshape(-1,2)
+    objp = np.zeros((board_size[0]*board_size[1],3), np.float32)
+    objp[:,:2] = np.mgrid[0:board_size[1],0:board_size[0]].T.reshape(-1,2)
     
     # Arrays to store object points and image points from all the images.
     objpoints = [] # 3d point in real world space
@@ -24,7 +24,7 @@ def get_matrices(images_path, h, w):
         gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     
         # Find the chess board corners
-        ret, corners = cv.findChessboardCorners(gray, (8,6), None)
+        ret, corners = cv.findChessboardCorners(gray, (board_size[1],board_size[0]), None)
         # print(ret)
         # If found, add object points, image points (after refining them)
         if ret == True:
@@ -34,7 +34,7 @@ def get_matrices(images_path, h, w):
             imgpoints.append(corners2)
     
             # Draw and display the corners
-            cv.drawChessboardCorners(img, (8,6), corners2, ret)
+            cv.drawChessboardCorners(img, (board_size[1],board_size[0]), corners2, ret)
             cv.imshow('img', img)
             cv.waitKey(500)
     
@@ -64,7 +64,7 @@ def get_matrices(images_path, h, w):
 
 # img = cv.imread("data/realmap_fix.png")
 # h,  w = img.shape[:2]
-# mtx, dist, nmtx, roi = get_matrices('data/calibration/right/*.png', h, w)
+# mtx, dist, nmtx, roi = get_matrices('data/calibration/right_2/*.png', h, w)
 
 # print("Right")
 # print(f"mtx = {mtx}")
@@ -97,7 +97,6 @@ def get_left_nmtx():
 def get_left_roi():
     return (34, 96, 1836, 869)
 
-
 # Right
 def get_right_mtx():
     return np.array([
@@ -121,3 +120,12 @@ def get_right_nmtx():
 
 def get_right_roi():
     return (16, 45, 1884, 974)
+    
+
+
+def get_left_borders():
+    return (250, 1400)
+
+
+def get_right_borders():
+    return (250, 1500)

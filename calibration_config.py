@@ -120,12 +120,7 @@ def get_right_nmtx():
 
 def get_right_roi():
     return (16, 45, 1884, 974)
-    
 
 
-def get_left_borders():
-    return (250, 1400)
-
-
-def get_right_borders():
-    return (250, 1500)
+def get_border_corners():
+    return [(304,120),(1386,140),(311,947),(1353,948)]

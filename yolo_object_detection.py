@@ -5,9 +5,25 @@ from ultralytics import YOLO
 
 
 # Target object to track
-target = 'cube'
-x_aim = 320  # Target x-position for centering object
-y_aim = 240  # Target y-position for centering object
+target = 'button'
+
+x_aim = 0  # Target x-position for centering object
+y_aim = 0  # Target y-position for centering object
+
+cam_pos = 0 # 0 - камера вперед, 1 - камера на куб/шарик
+claw = 0 # 0 - клешня за жопой, 1 - схватить куб/шарик, 2 - закинуть в корзину, 3 - нажать на кнопку
+
+if (target == 'cube') or (target == 'sphere'):
+    x_aim = 320 
+    y_aim = 240 
+
+if (target == 'button'):
+    x_aim = 150 
+    y_aim = 150 
+
+if (target == 'basket'):
+    x_aim = 150 
+    y_aim = 100 
 
 
 # Load the trained model
@@ -55,7 +71,8 @@ def process_webcam():
                 x = float(results[0].boxes.xywh[i][0])
                 y = float(results[0].boxes.xywh[i][1])
                 name = names[int(results[0].boxes.cls[i])]
-                area = (float(results[0].boxes.xyxy[i][2]) - float(results[0].boxes.xyxy[i][0])) * (float(results[0].boxes.xyxy[i][3]) - float(results[0].boxes.xyxy[i][1]))
+                #area = (float(results[0].boxes.xyxy[i][2]) - float(results[0].boxes.xyxy[i][0])) * (float(results[0].boxes.xyxy[i][3]) - float(results[0].boxes.xyxy[i][1]))
+                area = float(results[0].boxes.xywh[i][2])*float(results[0].boxes.xywh[i][3])
                 conf = float(results[0].boxes.conf[i])
 
                 if name in largest_objects:
@@ -74,12 +91,29 @@ def process_webcam():
                 # Calculate errors in x and y
                 e_x = x_aim - x_received
                 e_y = y_aim - y_received
+                    
+
+                if (e_x < 20) and (e_y < 20) and ((target == 'cube') or (target == 'sphere')):
+                    cam_pos = 1
+
+                if (e_x < 20) and (e_y < 10) and ((target == 'cube') or (target == 'sphere')):
+                    claw = 1
+                    cam_pos = 0
 
                 # Send e_x and e_y to the robot via UDP
-                message = f"{e_x},{e_y}".encode()  # Format: "e_x,e_y"
+                message = f"{e_x},{e_y},{0},{0},{cam_pos},{claw}".encode()  # Format: "e_x,e_y"
                 sock.sendto(message, (robot_ip, robot_port))
+                print('sent: ', message)
 
-            # Convert dictionary values to a list
+            else:
+                e_x = 0
+                e_y = 0
+                # Send e_x and e_y to the robot via UDP
+                message = f"{e_x},{e_y},{0},{0},{cam_pos},{claw}".encode()  # Format: "e_x,e_y"
+                sock.sendto(message, (robot_ip, robot_port))
+                print('sent: ', message)
+
+            # Convert dictionary values to a list 
             found_obj = list(largest_objects.values())
 
             for obj in found_obj:

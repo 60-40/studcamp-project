@@ -73,6 +73,9 @@ def get_matrices(images_path, board_size, h, w):
 # print(f"roi = {roi}")
 
 
+def get_left_shape():
+    return (869, 1836)
+
 #Left
 def get_left_mtx():
     return np.array([
@@ -122,5 +125,75 @@ def get_right_roi():
     return (16, 45, 1884, 974)
 
 
+def get_corners_approx():
+    return [(354, 100), (1432, 123), (1390, 930), (345, 915)]
+
+
+def find_corners(frame, show_mask =False):
+    frame = ~frame
+    mask = np.zeros_like(frame[:, :, 0], dtype='uint8')
+    radius = 50
+    centers = [(354, 100), (1432, 123), (1390, 930), (345, 915)] #Ручками
+    for center in centers:
+        cv.circle(mask, center, radius, 255, -1)
+
+    masked_frame = cv.bitwise_and(frame, frame, mask=mask)
+    masked_frame = ~masked_frame  # Инвертируем маску
+    if show_mask:
+        cv.imshow("mask", masked_frame)
+    # Преобразуем обрезанное изображение в черно-белое
+    gray = cv.cvtColor(masked_frame, cv.COLOR_BGR2GRAY)
+
+    # Найдем крайние черные точки на всей фотографии
+    black_pixels = np.argwhere(gray == 0)  # Найдем все черные пиксели (значение 0)
+
+    if black_pixels.size > 0:
+        # Самая верхняя левая точка
+        top_left = black_pixels[np.argmin(np.sum(black_pixels, axis=1))]
+        # Самая верхняя правая точка
+        top_right = black_pixels[np.argmin(black_pixels[:, 0] - black_pixels[:, 1])]
+        # Самая нижняя левая точка
+        bottom_left = black_pixels[np.argmax(black_pixels[:, 0] + black_pixels[:, 1])]
+        # Самая нижняя правая точка
+        bottom_right = black_pixels[np.argmax(black_pixels[:, 0] - black_pixels[:, 1])]
+
+        
+        return (tuple(top_left[::-1]), tuple(top_right[::-1]), tuple(bottom_left[::-1]), tuple(bottom_right[::-1]))
+
+
 def get_border_corners():
-    return [(304,120),(1386,140),(311,947),(1353,948)]
+    # return [(304,120),(1386,140),(311,947),(1353,948)]
+    # return [(330,105),(1418,134),(331,933),(1375,944)]
+    return [(358,2),(1450,43),(350,836),(1400,858)]
+
+
+def get_right_border_corners():
+    return [(330,115),(1531,108),(329,1000),(1520,1011)]
+
+
+def get_red_robor_hsv():
+    return (21, 0, 243), (180, 11, 255)
+
+
+def get_green_robor_hsv():
+    return (173, 65, 169), (180, 82, 224)
+
+
+def get_red_base_hsv():
+    return (0, 108, 193), (6, 255, 255)
+
+
+def get_green_base_hsv():
+    return (77, 90, 64), (84, 255, 150)
+
+
+color = "green"
+color = "red"
+
+
+def get_robor_hsv():
+    return get_red_robor_hsv() if color == "red" else get_green_robor_hsv()
+
+
+def get_base_hsv():
+    return get_red_base_hsv() if color == "red" else get_green_base_hsv()

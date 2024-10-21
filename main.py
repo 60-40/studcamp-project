@@ -50,6 +50,7 @@ class CameraProcessing():
     opponent = []
 
     map_graph = []
+    path = []
     base_node = None
     opponent_base_node = None
     buttons1_node = None
@@ -87,6 +88,9 @@ class CameraProcessing():
         self.preprocs.append(self.find_robor_on_start)
         self.preprocs.append(self.find_current_node_on_start)
         self.preprocs.append(self.set_ball_on_graph)
+
+        # here we go
+
     
     
     def add_rt_procs(self):
@@ -382,13 +386,16 @@ class CameraProcessing():
 
 
     def draw_graph(self, frame):
-        return mp.draw_graph(frame, self.map_graph)
+        self.path = mp.find_path(self.map_graph, self.current_node, self.cubes1_node)
+        return mp.draw_graph(frame, self.map_graph, self.path)
 
 
     def find_optimal_way_to(self, frame, target):
-        pass
         #TODO 
         # if target == ""
+        self.path = mp.find_path(self.map_graph, self.current_node, target)
+        frame = mp.draw_path(frame, self.path)
+        return frame
         
     
 

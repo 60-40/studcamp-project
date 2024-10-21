@@ -1,5 +1,5 @@
 import cv2 as cv
-
+import heapq
 
 class MapNode():
     x = 0
@@ -220,7 +220,42 @@ def find_closest_node(graph, x, y):
     return closest, distance
 
 
-def draw_graph(frame, graph):
+def find_path(graph: list[MapNode], start: MapNode, end: MapNode) -> list[MapNode]:
+    distances = {node.id: float('inf') for node in graph}
+    distances[start.id] = 0
+
+    previous_nodes = {node.id: None for node in graph}
+
+    priority_queue = [(0, start.id)]
+
+    while priority_queue:
+        current_distance, current_node_id = heapq.heappop(priority_queue)
+
+        if current_node_id == end.id:
+            break
+
+        current_node = graph[current_node_id]
+
+        for neighbour_id, weight in current_node.neighbours.items():
+            distance = current_distance + weight
+
+            if distance < distances[neighbour_id]:
+                distances[neighbour_id] = distance
+                previous_nodes[neighbour_id] = current_node_id
+                heapq.heappush(priority_queue, (distance, neighbour_id))
+
+    path = []
+    current_node_id = end.id
+    while current_node_id is not None:
+        path.append(graph[current_node_id])
+        current_node_id = previous_nodes[current_node_id]
+
+    path.reverse()
+
+    return path
+
+
+def draw_graph(frame, graph, path = None):
     img = frame.copy()
     for node in graph:
         color = 255
@@ -242,6 +277,10 @@ def draw_graph(frame, graph):
         cv.putText(img, str(node.id), (node.x, node.y), font, 0.5, (255, 255, 255), 1, cv.LINE_AA)
         for neighbor in node.neighbours:
             cv.line(img, (node.x, node.y), (graph[neighbor].x, graph[neighbor].y), 255, 2)
+    for i, node in enumerate(path):
+        cv.circle(img, (node.x, node.y), 5, (0, 255, 0), 5)
+        if i > 0:
+            cv.line(img, (node.x, node.y), (path[i - 1].x, path[i - 1].y), (0, 255, 0), 2)
     return img
 
 if __name__ == "__main__":

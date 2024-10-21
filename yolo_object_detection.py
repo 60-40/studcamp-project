@@ -30,7 +30,7 @@ if (target == 'basket'):
 # Load the trained model
 model_path = "nano_best.pt"
 model = YOLO(model_path)
-
+model.to('cuda')
 names = {0: 'basket', 1: 'button', 2: 'cube', 3: 'sphere'}
 
 num = 2  # process every num_th picture

@@ -4,6 +4,8 @@ from enum import Enum
 from ultralytics import YOLO
 import math
 import socket
+import subprocess
+import sys
 
 import calibration, calibration_config
 import map as mp, map_config
@@ -62,7 +64,7 @@ class CameraProcessing():
     cur_center = (-1, -1)
     prev_center = (-1, -1)
 
-    
+    we_take_cube: bool = False
     
     def __init__(self, color, address=None, ):
         self.address = address or self.address
@@ -101,6 +103,7 @@ class CameraProcessing():
         self.rt_procs.append(self.find_current_node)
         self.rt_procs.append(self.find_cubes)
         self.rt_procs.append(self.draw_graph)
+        self.rt_procs.append(self.total_shit)
 
 
     def capture_start_frame(self):
@@ -277,7 +280,7 @@ class CameraProcessing():
             self.map_graph[22].remove_neighbour(27)
             self.map_graph[12].remove_neighbour(7)
             self.map_graph[27].remove_neighbour(22)
-        
+
 
     def check_for_wall(self, node1, node2):        
         img = cv.medianBlur(self.start_frame, 5)
@@ -389,6 +392,24 @@ class CameraProcessing():
         self.path = mp.find_path(self.map_graph, self.current_node, self.cubes1_node)
         return mp.draw_graph(frame, self.map_graph, self.path)
 
+
+    # Le Govnocode
+    def total_shit(self, frame):
+        if self.we_take_cube == False:
+            target = self.cubes1_node
+        else:
+            target = self.base_node
+        self.path = mp.find_path(self.map_graph, self.current_node, target)
+        for i, node in enumerate(self.path):
+            cv.circle(frame, (node.x, node.y), 5, (0, 255, 0), 5)
+            if i > 0:
+                cv.line(frame, (node.x, node.y), (self.path[i - 1].x, self.path[i - 1].y), (0, 255, 0), 2)
+        if len(self.path) == 2:
+            print("[INFO] FUCK YEAH! WE ARE HERE!")
+            yolo_object_detection_process = subprocess.call([sys.executable, "yolo_object_detection.py"])
+        else:
+            print("[INFO] HOW DO I DRIVE ROBOR?")
+        return frame
 
     def find_optimal_way_to(self, frame, target):
         #TODO 

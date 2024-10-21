@@ -19,8 +19,8 @@ if (target == 'cube') or (target == 'sphere'):
     y_aim = 240 
 
 if (target == 'button'):
-    x_aim = 150 
-    y_aim = 150 
+    x_aim = 320
+    y_aim = 240 
 
 if (target == 'basket'):
     x_aim = 150 
@@ -108,7 +108,8 @@ def process_webcam():
                 # Calculate errors in x and y
                 e_x = x_aim - x_received
                 e_y = y_aim - y_received
-                    
+                
+                cam_pos = 0
 
                 if (e_x < 20) and (e_y < 20) and ((target == 'cube') or (target == 'sphere')):
                     cam_pos = 1
@@ -117,16 +118,21 @@ def process_webcam():
                     claw = 1
                     cam_pos = 0
 
+                e_x_top = 0
+                e_y_top = 0
+
                 # Send e_x and e_y to the robot via UDP
-                message = f"{e_x},{e_y},{0},{0},{cam_pos},{claw}".encode()  # Format: "e_x,e_y"
+                message = f"{e_x},{e_y},{e_x_top},{e_y_top}".encode()  # Format: "e_x,e_y"
                 sock.sendto(message, (robot_ip, robot_port))
                 print('sent: ', message)
 
             else:
                 e_x = 0
                 e_y = 0
+                e_x_top = 0
+                e_y_top = 0
                 # Send e_x and e_y to the robot via UDP
-                message = f"{e_x},{e_y},{0},{0},{cam_pos},{claw}".encode()  # Format: "e_x,e_y"
+                message = f"{e_x},{e_y},{e_x_top},{e_y_top}".encode()  # Format: "e_x,e_y"
                 sock.sendto(message, (robot_ip, robot_port))
                 print('sent: ', message)
 

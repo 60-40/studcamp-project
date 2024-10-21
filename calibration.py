@@ -21,7 +21,7 @@ def undistort(img, mtx, dist, nmtx, roi):
     
     # crop the image
     x, y, w, h = roi
-    dst = dst[y:y+h, x:x+w]
+    # dst = dst[y:y+h, x:x+w]
     # cv.imwrite('calibresult_left.png', dst)
     return dst
 
@@ -156,6 +156,7 @@ def agglomerative_cluster(contours, threshold_distance=40.0):
 
     return current_contours
 
+
 def test(img):
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     gray = cv.medianBlur(gray, 5)
@@ -186,9 +187,11 @@ def get_corners(cnt):
     return [left_up, right_up, left_down, right_down]
     # print(up, down)
 
-def find_homography(frame, scale_map=2, test=False):
+def find_homography(frame, scale_map=2, test1=True, test=False):
     # (X1, Y1), (X2, Y2), (X3, Y3), (X4, Y4) = map_config.border_corners
-    if test:
+    if test1:
+        (x1, y1), (x2, y2), (x3, y3), (x4, y4) = find_corners(frame)
+    elif test:
         gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
         gray = cv.medianBlur(gray, 5)
         _, thresh = cv.threshold(gray, 127, 255, cv.THRESH_BINARY_INV)
@@ -208,6 +211,7 @@ def find_homography(frame, scale_map=2, test=False):
         (x1, y1), (x2, y2), (x3, y3), (x4, y4) = get_corners(approx)
     else:
         (x1, y1), (x2, y2), (x3, y3), (x4, y4) = calibration_config.get_border_corners()
+    (x1, y1), (x2, y2), (x3, y3), (x4, y4) = find_corners(frame)
     (X1, Y1), (X2, Y2), (X3, Y3), (X4, Y4) = map_config.border_corners
     X1, Y1, X2, Y2, X3, Y3, X4, Y4 = [i * scale_map for i in [X1, Y1, X2, Y2, X3, Y3, X4, Y4]]
     # Опорные точки на изображении и соответствующие точки на карте
@@ -227,7 +231,7 @@ def find_homography(frame, scale_map=2, test=False):
 def warp_frame(frame, H, scale_map=2):
     w, h = map_config.map_size
     map_width, map_height = [i * scale_map for i in [w, h]]
-    H = H or find_homography(frame, scale_map)
+    # H = H if H else find_homography(frame, scale_map)
     aligned_frame = cv.warpPerspective(frame, H, (map_width, map_height))
     return aligned_frame
 
@@ -244,45 +248,49 @@ def find_biggest_hsv_object_center(frame, lower_hsv, upper_hsv):
 
     return (x + w//2, y + h//2)
 
+
 def get_errors(frame, robor_center, prev_center):
     end_pt = (105, 500)
     e1 = get_angle(robor_center, prev_center, end_pt)
     e2 = get_distance(robor_center, end_pt)
     return e1,e2
 
+
 def play_video_with_frame_processing(path, procs, i=0, out_path="out"):
-    cap = cv.VideoCapture(path)
     # cap = video_capture_right
     robor_center = (100, 65) #TODO центр робота в начале
-    while(cap.isOpened()):
-        # Capture frame-by-frame
-        ret, frame = cap.read()
-        if ret == True:
-            # Frame processing
-            for p in procs:
-                frame = p(frame)
-            robor = find_biggest_robor(frame)
-            if robor:
-                robor_center, prev_center = robor[1], robor_center
-                print("center", robor_center)
-                e1, e2 = get_errors(frame, robor_center, prev_center)
-                print("error",e1,e2)
-                message = f"{0},{0},{e1},{e2},{0},{0}".encode()  # Format: "e_x,e_y"
-                sock.sendto(message, (robot_ip, robot_port))
-            # Display the resulting frame
-            cv.imshow('Frame',frame)
-            k = cv.waitKey(25)
-            # Press Q on keyboard to  exit
-            if  k & 0xFF == ord('q'):
+    while True:
+        cap = cv.VideoCapture(path)
+        while(cap.isOpened()):
+            # Capture frame-by-frame
+            ret, frame = cap.read()
+            if ret == True:
+                # Frame processing
+                for p in procs:
+                    frame = p(frame)
+                # robor = find_biggest_robor(frame)
+                # if robor:
+                #     robor_center, prev_center = robor[1], robor_center
+                #     print("center", robor_center)
+                #     e1, e2 = get_errors(frame, robor_center, prev_center)
+                #     print("error",e1,e2)
+                #     message = f"{0},{0},{e1},{e2},{0},{0}".encode()  # Format: "e_x,e_y"
+                #     sock.sendto(message, (robot_ip, robot_port))
+                # Display the resulting frame
+                cv.imshow('Frame',frame)
+                k = cv.waitKey(25)
+                # Press Q on keyboard to  exit
+                if  k & 0xFF == ord('q'):
+                    break
+                elif k & 0xFF == ord('p'):
+                    cv.imwrite(f"{out_path}/frame{i}.png",frame)
+                    i+=1
+                else:
+                    continue
+            # Break the loop
+            else: 
                 break
-            elif k & 0xFF == ord('p'):
-                cv.imwrite(f"{out_path}/frame{i}.png",frame)
-                i+=1
-            else:
-                continue
-        # Break the loop
-        else: 
-            break
+        cv.waitKey(0)
 
 
 def play_video(path, i=0):
@@ -306,6 +314,7 @@ def play_video(path, i=0):
         # Break the loop
         else: 
             break
+
 
 def get_yolo_coords(frame):
     results = model(frame)
@@ -346,6 +355,7 @@ def find_vector_of_robor(frame):
     cv.arrowedLine(frame,(x1,y1),(x2,y2),(0,255,0),5)
     return frame
 
+
 def get_angle(robor_center, prev_center, end_pt):
     
     AB = (prev_center[0] - robor_center[0], prev_center[1] - robor_center[1])
@@ -356,12 +366,48 @@ def get_angle(robor_center, prev_center, end_pt):
         
     return angle_rad
 
+
+def find_corners(frame, show_mask =False):
+    frame = ~frame
+    mask = np.zeros_like(frame[:, :, 0], dtype='uint8')
+    radius = 50
+    centers = [(354, 100), (1432, 123), (1390, 930), (345, 915)] #Ручками
+    for center in centers:
+        cv.circle(mask, center, radius, 255, -1)
+
+    masked_frame = cv.bitwise_and(frame, frame, mask=mask)
+    masked_frame = ~masked_frame  # Инвертируем маску
+    if show_mask:
+        cv.imshow("mask", masked_frame)
+    # Преобразуем обрезанное изображение в черно-белое
+    # gray = cv.cvtColor(masked_frame, cv.COLOR_BGR2GRAY)
+    _, th = cv.threshold(masked_frame, 110,255,cv.THRESH_BINARY)
+    gray = cv.cvtColor(th, cv.COLOR_BGR2GRAY)
+    # Найдем крайние черные точки на всей фотографии
+    black_pixels = np.argwhere(gray == 0)  # Найдем все черные пиксели (значение 0)
+
+    if black_pixels.size > 0:
+        # Самая верхняя левая точка
+        top_left = black_pixels[np.argmin(np.sum(black_pixels, axis=1))]
+        # Самая верхняя правая точка
+        top_right = black_pixels[np.argmin(black_pixels[:, 0] - black_pixels[:, 1])]
+        # Самая нижняя левая точка
+        bottom_left = black_pixels[np.argmax(black_pixels[:, 0] - black_pixels[:, 1])]
+        # Самая нижняя правая точка
+        bottom_right = black_pixels[np.argmax(black_pixels[:, 0] + black_pixels[:, 1])]
+
+        
+        return (tuple(top_left[::-1]), tuple(top_right[::-1]), tuple(bottom_left[::-1]), tuple(bottom_right[::-1]))
+
+
 def get_distance(start_pt, end_pt):
     return int(((end_pt[0] - start_pt[0])**2 + (end_pt[1] - start_pt[1])**2)**.5)
+
 
 def get_base_coord(frame, color):
     lower_hsv, upper_hsv = calibration_config.get_red_base_hsv() if color == "red" else calibration_config.get_green_base_hsv()
     return find_biggest_hsv_object_center(frame, lower_hsv, upper_hsv)
+
 
 if __name__ == "__main__":
     # img = cv.imread("out/frame0.png")
@@ -373,12 +419,31 @@ if __name__ == "__main__":
 
     # undistort_video("rtsp://Admin:rtf123@192.168.2.250/251:554/1/1", left=True, homography=True, yolo=True)
     
-
-    procs = []
+    cap = cv.VideoCapture("output_video_left_base.avi")
+    img = None
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if ret:
+            img = frame
+            break
+    cv.imshow("orig",img)
     mtx = calibration_config.get_left_mtx()
     dist = calibration_config.get_left_dist()
     nmtx = calibration_config.get_left_nmtx()
     roi = calibration_config.get_left_roi()
+    img = undistort(img, mtx, dist, nmtx, roi)
+    cv.imshow("undistorted", img)
+    points = find_corners(img, True)
+    for p in points:
+        cv.circle(img, p, 3, 255, 4)
+    cv.imshow("points", img)
+    H = find_homography(img)
+    img = warp_frame(img, H)
+    cv.imshow("warped", img)
+    print(points)
+    cv.waitKey(0)
+    exit(0)
+    procs = []
     proc_undistort_frame = lambda frame: undistort(frame, mtx, dist, nmtx, roi)
     H = None
     proc_warp_frame = lambda frame: warp_frame(frame, H)
@@ -393,8 +458,8 @@ if __name__ == "__main__":
     # proc_add_mask_green = lambda frame: add_mask(frame, (173,180), (65,82), (169,224))
 
     procs = [proc_undistort_frame, proc_warp_frame]
-
-    play_video_with_frame_processing("rtsp://Admin:rtf123@192.168.2.250/251:554/1/1", procs)
+    play_video_with_frame_processing("output_video_left_base.avi", procs)
+    # play_video_with_frame_processing("rtsp://Admin:rtf123@192.168.2.250/251:554/1/1", procs)
 
     # img = cv.imread("data/left.png")
     # tes = warp_frame(img)

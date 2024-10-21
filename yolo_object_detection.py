@@ -1,6 +1,7 @@
 import cv2
 import socket
 import time
+import numpy as np
 from ultralytics import YOLO
 
 
@@ -77,9 +78,25 @@ def process_webcam():
 
                 if name in largest_objects:
                     if area > largest_objects[name][3]:
-                        largest_objects[name] = [name, x, y, area, conf]
+                        if name != "button":
+                            largest_objects[name] = [name, x, y, area, conf]
+                    else:
+                        hsv_image = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+                        roi = hsv_image[max(0, y - 5):min(frame.shape[0], y + 5), max(0, x - 5):min(frame.shape[1], x + 5)]
+                
+                        if roi.shape[0] > 0 and roi.shape[1] > 0: # Проверка, что область не пустая
+                            mask1 = cv2.inRange(roi, np.array([43, 46, 92]), np.array([71, 200, 255]))
+                            mask2 = cv2.inRange(roi, np.array([71, 79, 115]), np.array([112, 255, 255]))
+                            combined_mask = cv2.bitwise_or(mask1, mask2)
+
+                            if np.count_nonzero(combined_mask) > 0: # Проверяем, есть ли пиксели в маске
+                                largest_objects[name] = [name, x, y, area, conf]
+                                
                 else:
                     largest_objects[name] = [name, x, y, area, conf]
+
+                
+                        
 
             # Extract coordinates for the target object
             e_x, e_y = None, None

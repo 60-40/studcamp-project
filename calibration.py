@@ -251,39 +251,40 @@ def get_errors(frame, robor_center, prev_center):
     return e1,e2
 
 def play_video_with_frame_processing(path, procs, i=0, out_path="out"):
-    cap = cv.VideoCapture(path)
     # cap = video_capture_right
     robor_center = (100, 65) #TODO центр робота в начале
-    while(cap.isOpened()):
-        # Capture frame-by-frame
-        ret, frame = cap.read()
-        if ret == True:
-            # Frame processing
-            for p in procs:
-                frame = p(frame)
-            robor = find_biggest_robor(frame)
-            if robor:
-                robor_center, prev_center = robor[1], robor_center
-                print("center", robor_center)
-                e1, e2 = get_errors(frame, robor_center, prev_center)
-                print("error",e1,e2)
-                message = f"{0},{0},{e1},{e2},{0},{0}".encode()  # Format: "e_x,e_y"
-                sock.sendto(message, (robot_ip, robot_port))
-            # Display the resulting frame
-            cv.imshow('Frame',frame)
-            k = cv.waitKey(25)
-            # Press Q on keyboard to  exit
-            if  k & 0xFF == ord('q'):
+    while True:
+        cap = cv.VideoCapture(path)
+        while(cap.isOpened()):
+            # Capture frame-by-frame
+            ret, frame = cap.read()
+            if ret == True:
+                # Frame processing
+                for p in procs:
+                    frame = p(frame)
+                robor = find_biggest_robor(frame)
+                if robor:
+                    robor_center, prev_center = robor[1], robor_center
+                    print("center", robor_center)
+                    e1, e2 = get_errors(frame, robor_center, prev_center)
+                    print("error",e1,e2)
+                    message = f"{0},{0},{e1},{e2},{0},{0}".encode()  # Format: "e_x,e_y"
+                    sock.sendto(message, (robot_ip, robot_port))
+                # Display the resulting frame
+                cv.imshow('Frame',frame)
+                k = cv.waitKey(25)
+                # Press Q on keyboard to  exit
+                if  k & 0xFF == ord('q'):
+                    break
+                elif k & 0xFF == ord('p'):
+                    cv.imwrite(f"{out_path}/frame{i}.png",frame)
+                    i+=1
+                else:
+                    continue
+            # Break the loop
+            else: 
                 break
-            elif k & 0xFF == ord('p'):
-                cv.imwrite(f"{out_path}/frame{i}.png",frame)
-                i+=1
-            else:
-                continue
-        # Break the loop
-        else: 
-            break
-
+        cv.waitKey(0)
 
 def play_video(path, i=0):
     cap = cv.VideoCapture(path)

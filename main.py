@@ -6,10 +6,11 @@ import math
 import socket
 import subprocess
 import sys
+from multiprocessing import Process
 
 import calibration, calibration_config
 import map as mp, map_config
-
+from yolo_object_detection import find_target
 
 # Написать поиск маршрута
 # Добавить вектор движения для текущего кадра
@@ -63,6 +64,7 @@ class CameraProcessing():
     ball_node = None
     cur_center = (-1, -1)
     prev_center = (-1, -1)
+    target_proc = None
 
     we_take_cube: bool = False
     
@@ -406,7 +408,10 @@ class CameraProcessing():
                 cv.line(frame, (node.x, node.y), (self.path[i - 1].x, self.path[i - 1].y), (0, 255, 0), 2)
         if len(self.path) == 2:
             print("[INFO] FUCK YEAH! WE ARE HERE!")
-            yolo_object_detection_process = subprocess.call([sys.executable, "yolo_object_detection.py"])
+            if self.target_proc is None or not self.target_proc.is_alive():
+                self.target_proc = Process(target=find_target, args=("cube", ))
+                self.target_proc.start()
+                # yolo_object_detection_process = subprocess.call([sys.executable, "yolo_object_detection.py"])
         else:
             print("[INFO] HOW DO I DRIVE ROBOR?")
         return frame

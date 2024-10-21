@@ -1,5 +1,5 @@
 # Робот на гусенечной платформе с манипулятором
-- [Регламент Yandex Camp.pdf](https://github.com/user-attachments/files/17324129/Yandex.Camp.pdf)
+- [Регламент Yandex Camp v3.pdf](https://github.com/user-attachments/files/17455443/Yandex.Camp.v3.pdf)
 # Состав
 - [Артем](https://t.me/temakonkov)
 - [Артемий](https://t.me/LaKeeRoK)
@@ -7,7 +7,7 @@
 - [Марат](https://t.me/v_oxel)
 - [Ярослав](https://t.me/MrDragar)
 # Основные задачи:
----
+
 ## сборка и отладка
 **Отвественные**: Данил, Артемий
 - [x] ~Сборка~
@@ -33,6 +33,7 @@
 - [x] Переписывание протокола передачи данных
 - [x] Реализация защиты от врезания через датчик
 - [ ] Реализация перемещения по верхней камере 
+
 --- 
 ## Алгоритм планирования пути
 **Отвественные**: Артем и Марат
@@ -64,6 +65,8 @@
 - [roboflow](https://app.roboflow.com) - сервис разметки и создания датасета
 - [YOLO и ultralytics](https://github.com/ultralytics) - Нейронная сеть YOLO
 - [cv2](https://docs.opencv.org/4.x/d6/d00/tutorial_py_root.html) - библиотека с компьютерным зрением
+- [генератор лабиринта](https://t.me/c/2273739257/2/2197)
+- 
 --- 
 ## Протокол передачи данных
 ![Screenshot from 2024-10-11 10-03-22](https://github.com/user-attachments/assets/1dc6dee4-8911-42a9-a417-03092515829f)

@@ -187,7 +187,7 @@ def get_corners(cnt):
     return [left_up, right_up, left_down, right_down]
     # print(up, down)
 
-def find_homography(frame, scale_map=2, test1=True, test=False):
+def find_homography(frame, scale_map=2, test1=False, test=False):
     # (X1, Y1), (X2, Y2), (X3, Y3), (X4, Y4) = map_config.border_corners
     if test1:
         (x1, y1), (x2, y2), (x3, y3), (x4, y4) = find_corners(frame)
@@ -211,7 +211,7 @@ def find_homography(frame, scale_map=2, test1=True, test=False):
         (x1, y1), (x2, y2), (x3, y3), (x4, y4) = get_corners(approx)
     else:
         (x1, y1), (x2, y2), (x3, y3), (x4, y4) = calibration_config.get_border_corners()
-    (x1, y1), (x2, y2), (x3, y3), (x4, y4) = find_corners(frame)
+    # (x1, y1), (x2, y2), (x3, y3), (x4, y4) = find_corners(frame)
     (X1, Y1), (X2, Y2), (X3, Y3), (X4, Y4) = map_config.border_corners
     X1, Y1, X2, Y2, X3, Y3, X4, Y4 = [i * scale_map for i in [X1, Y1, X2, Y2, X3, Y3, X4, Y4]]
     # Опорные точки на изображении и соответствующие точки на карте
@@ -371,7 +371,7 @@ def find_corners(frame, show_mask =False):
     frame = ~frame
     mask = np.zeros_like(frame[:, :, 0], dtype='uint8')
     radius = 50
-    centers = [(354, 100), (1432, 123), (1390, 930), (345, 915)] #Ручками
+    centers = [(407, 105), (1486, 138), (406, 924), (1446, 943)] #Ручками
     for center in centers:
         cv.circle(mask, center, radius, 255, -1)
 

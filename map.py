@@ -269,8 +269,6 @@ def draw_graph(frame, graph, path = None):
             color = (51,153,255)
         if node.has_ball_feature():
             color = (51,255,255)
-        if node.has_robor_feature():
-            color = (102,0,204)
         
         cv.circle(img, (node.x, node.y), 5, color, 5)
         font = cv.FONT_HERSHEY_SIMPLEX

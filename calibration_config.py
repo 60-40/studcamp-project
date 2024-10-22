@@ -164,7 +164,8 @@ def find_corners(frame, show_mask =False):
 def get_border_corners():
     # return [(304,120),(1386,140),(311,947),(1353,948)]
     # return [(330,105),(1418,134),(331,933),(1375,944)]
-    return [(358,2),(1450,43),(350,836),(1400,858)]
+    # return [(358,2),(1450,43),(350,836),(1400,858)]
+    return [(400, 100), (1494,134), (397, 932), (1447, 953)]
 
 
 def get_right_border_corners():
@@ -186,14 +187,3 @@ def get_red_base_hsv():
 def get_green_base_hsv():
     return (77, 90, 64), (84, 255, 150)
 
-
-color = "green"
-color = "red"
-
-
-def get_robor_hsv():
-    return get_red_robor_hsv() if color == "red" else get_green_robor_hsv()
-
-
-def get_base_hsv():
-    return get_red_base_hsv() if color == "red" else get_green_base_hsv()
